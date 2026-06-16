@@ -43,9 +43,6 @@ function Checkout() {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
-  const [latitude, setLatitude] = useState<number | null>(null);
-  const [longitude, setLongitude] = useState<number | null>(null);
-  const [googleMapsUrl, setGoogleMapsUrl] = useState("");
   const [method, setMethod] = useState<Method>(null);
   const [confirmCod, setConfirmCod] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -93,9 +90,6 @@ function Checkout() {
           setAddress(data.address ?? "");
           setPhone(data.phone ?? "");
           setName(data.full_name ?? "");
-          setLatitude(data.latitude ?? null);
-          setLongitude(data.longitude ?? null);
-          setGoogleMapsUrl(data.google_maps_url ?? "");
         }
       });
   }, [user]);
@@ -171,9 +165,6 @@ function Checkout() {
           paymentProofPath: path,
           amountPaid: amt,
           customerNotes: notes.trim() || undefined,
-          latitude: undefined,
-          longitude: undefined,
-          googleMapsUrl: undefined,
         },
       });
       cart.clear();
@@ -203,9 +194,6 @@ function Checkout() {
           deliveryAddress: address,
           phone,
           total: bill.grandTotal,
-          latitude: undefined,
-          longitude: undefined,
-          googleMapsUrl: undefined,
         },
       });
       cart.clear();
