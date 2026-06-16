@@ -179,7 +179,7 @@ function Checkout() {
       discount = coupon.discount_value;
     }
     setCouponDiscount(discount);
-    toast.success(`Coupon "${coupon.code}" applied!`);
+    toast.success(`"${coupon.code}" coupon applied. Congratulations! You saved ₹${discount.toFixed(2)}`);
   }
 
   function validateBase() {
@@ -298,8 +298,31 @@ function Checkout() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <Header />
-      <div className="container mx-auto grid max-w-4xl gap-6 px-4 py-6 md:grid-cols-[1fr_360px]">
-        <div className="space-y-4">
+      <div className="container mx-auto max-w-4xl px-4 py-6 space-y-6">
+        {appliedCoupon && couponDiscount > 0 && (
+          <div className="rounded-lg border border-green-500/20 bg-green-500/5 p-4 text-green-600 dark:text-green-400 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-green-500" />
+              <div className="text-sm font-semibold">
+                "{appliedCoupon.code}" coupon applied. Congratulations! You saved ₹{couponDiscount.toFixed(2)}
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setAppliedCoupon(null);
+                setCouponDiscount(0);
+                setCouponInput("");
+                toast.info("Coupon removed");
+              }}
+              className="text-xs font-semibold underline hover:opacity-80 transition cursor-pointer"
+            >
+              Remove
+            </button>
+          </div>
+        )}
+
+        <div className="grid gap-6 md:grid-cols-[1fr_360px]">
+          <div className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Delivery details</CardTitle>
@@ -582,6 +605,7 @@ function Checkout() {
             </div>
           </CardContent>
         </Card>
+      </div>
       </div>
 
       <AlertDialog open={confirmCod} onOpenChange={setConfirmCod}>
