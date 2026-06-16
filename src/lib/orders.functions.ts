@@ -38,6 +38,17 @@ export const placeCodOrder = createServerFn({ method: "POST" })
         .maybeSingle();
 
       if (coupon && !couponErr) {
+        if (coupon.is_first_order_only) {
+          const { count, error: countErr } = await supabase
+            .from("orders")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId);
+
+          if (countErr || (count !== null && count > 0)) {
+            throw new Error("This coupon is only valid for your first order.");
+          }
+        }
+
         const itemsTotal = data.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
         if (itemsTotal >= Number(coupon.min_order_amount)) {
           finalCouponCode = coupon.code;
@@ -115,6 +126,17 @@ export const placeUpiOrder = createServerFn({ method: "POST" })
         .maybeSingle();
 
       if (coupon && !couponErr) {
+        if (coupon.is_first_order_only) {
+          const { count, error: countErr } = await supabase
+            .from("orders")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId);
+
+          if (countErr || (count !== null && count > 0)) {
+            throw new Error("This coupon is only valid for your first order.");
+          }
+        }
+
         const itemsTotal = data.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
         if (itemsTotal >= Number(coupon.min_order_amount)) {
           finalCouponCode = coupon.code;

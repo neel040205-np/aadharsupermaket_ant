@@ -20,6 +20,7 @@ type Coupon = {
   discount_value: number;
   min_order_amount: number;
   is_active: boolean;
+  is_first_order_only: boolean;
   created_at: string;
 };
 
@@ -33,6 +34,7 @@ function CouponsAdmin() {
   const [discountType, setDiscountType] = useState<"percent" | "flat">("percent");
   const [discountValue, setDiscountValue] = useState("");
   const [minOrderAmount, setMinOrderAmount] = useState("");
+  const [isFirstOrderOnly, setIsFirstOrderOnly] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -71,6 +73,7 @@ function CouponsAdmin() {
         discount_value: val,
         min_order_amount: minAmt,
         is_active: true,
+        is_first_order_only: isFirstOrderOnly,
       });
 
       if (error) throw error;
@@ -79,6 +82,7 @@ function CouponsAdmin() {
       setCode("");
       setDiscountValue("");
       setMinOrderAmount("");
+      setIsFirstOrderOnly(false);
       load();
     } catch (err: any) {
       toast.error(err.message || "Failed to create coupon");
@@ -177,6 +181,19 @@ function CouponsAdmin() {
               />
             </div>
 
+            <div className="flex items-center gap-2 border-t pt-3 pb-1">
+              <input
+                id="firstOrderOnly"
+                type="checkbox"
+                checked={isFirstOrderOnly}
+                onChange={(e) => setIsFirstOrderOnly(e.target.checked)}
+                className="h-4 w-4 rounded border-border text-primary focus:ring-primary bg-background"
+              />
+              <Label htmlFor="firstOrderOnly" className="cursor-pointer text-xs">
+                First Order Only
+              </Label>
+            </div>
+
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Create Coupon"}
             </Button>
@@ -209,6 +226,7 @@ function CouponsAdmin() {
                     <th className="py-2 px-3">Code</th>
                     <th className="py-2 px-3">Discount</th>
                     <th className="py-2 px-3">Min Order</th>
+                    <th className="py-2 px-3">Applicability</th>
                     <th className="py-2 px-3">Status</th>
                     <th className="py-2 px-3 text-right">Actions</th>
                   </tr>
@@ -222,6 +240,15 @@ function CouponsAdmin() {
                       </td>
                       <td className="py-3 px-3">
                         {c.min_order_amount > 0 ? `₹${c.min_order_amount}` : "None"}
+                      </td>
+                      <td className="py-3 px-3">
+                        {c.is_first_order_only ? (
+                          <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-0.5 text-2xs font-semibold text-blue-500 uppercase">
+                            First Order
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">All Orders</span>
+                        )}
                       </td>
                       <td className="py-3 px-3">
                         <button

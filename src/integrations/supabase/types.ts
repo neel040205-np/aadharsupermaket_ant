@@ -88,6 +88,7 @@ export type Database = {
           discount_value: number;
           min_order_amount: number;
           is_active: boolean;
+          is_first_order_only: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -98,6 +99,7 @@ export type Database = {
           discount_value: number;
           min_order_amount?: number;
           is_active?: boolean;
+          is_first_order_only?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -108,6 +110,7 @@ export type Database = {
           discount_value?: number;
           min_order_amount?: number;
           is_active?: boolean;
+          is_first_order_only?: boolean;
           created_at?: string;
           updated_at?: string;
         };

@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Banknote, Copy, Download, Smartphone, CheckCircle2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/checkout")({
   head: () => ({ meta: [{ title: "Payment — Aadhar Supermarket" }] }),
@@ -39,6 +40,7 @@ type Coupon = {
   discount_type: string;
   discount_value: number;
   min_order_amount: number;
+  is_first_order_only: boolean;
 };
 
 function Checkout() {
@@ -50,6 +52,7 @@ function Checkout() {
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([]);
+  const [orderCount, setOrderCount] = useState(0);
 
   const bill = computeBill(itemTotal, couponDiscount);
   const navigate = useNavigate();
@@ -112,12 +115,23 @@ function Checkout() {
   useEffect(() => {
     supabase
       .from("coupons")
-      .select("id,code,discount_type,discount_value,min_order_amount")
+      .select("id,code,discount_type,discount_value,min_order_amount,is_first_order_only")
       .eq("is_active", true)
       .then(({ data }) => {
         if (data) setAvailableCoupons(data as Coupon[]);
       });
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .then(({ count }) => {
+        if (count !== null) setOrderCount(count);
+      });
+  }, [user]);
 
   useEffect(() => {
     if (!appliedCoupon) return;
@@ -144,6 +158,11 @@ function Checkout() {
     const coupon = availableCoupons.find((c) => c.code === cleanCode);
     if (!coupon) {
       toast.error("Invalid coupon code");
+      return;
+    }
+
+    if (coupon.is_first_order_only && orderCount > 0) {
+      toast.error("This coupon is only valid for your first order.");
       return;
     }
 
@@ -354,15 +373,20 @@ function Checkout() {
                           setCouponInput(c.code);
                           applyCoupon(c.code);
                         }}
-                        disabled={itemTotal < c.min_order_amount}
+                        disabled={itemTotal < c.min_order_amount || (c.is_first_order_only && orderCount > 0)}
                         className={`group relative flex flex-col items-start gap-0.5 rounded-lg border p-2 text-left transition ${
                           appliedCoupon?.id === c.id
                             ? "border-primary bg-primary/5"
                             : "border-border hover:bg-muted/50 disabled:opacity-40 disabled:hover:bg-transparent"
                         }`}
                       >
-                        <span className="font-mono font-bold text-xs text-foreground uppercase tracking-wider">
+                        <span className="font-mono font-bold text-xs text-foreground uppercase tracking-wider flex items-center gap-1.5">
                           {c.code}
+                          {c.is_first_order_only && (
+                            <Badge variant="outline" className="text-3xs px-1 py-0 h-auto text-blue-500 border-blue-500/30 bg-blue-500/5 font-sans leading-none uppercase">
+                              First Order
+                            </Badge>
+                          )}
                         </span>
                         <span className="text-2xs text-muted-foreground">
                           {c.discount_type === "percent" ? `${c.discount_value}% OFF` : `₹${c.discount_value} OFF`}
