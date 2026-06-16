@@ -27,9 +27,6 @@ function ProfilePage() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [latitude, setLatitude] = useState<number | null>(null);
-  const [longitude, setLongitude] = useState<number | null>(null);
-  const [googleMapsUrl, setGoogleMapsUrl] = useState("");
 
   // Load existing profile
   useEffect(() => {
@@ -47,9 +44,6 @@ function ProfilePage() {
           setFullName(data.full_name ?? "");
           setPhone(data.phone ?? "");
           setAddress(data.address ?? "");
-          setLatitude(data.latitude ?? null);
-          setLongitude(data.longitude ?? null);
-          setGoogleMapsUrl(data.google_maps_url ?? "");
         }
         setLoading(false);
       });
@@ -74,9 +68,6 @@ function ProfilePage() {
         full_name: fullName.trim(),
         phone: phone.trim(),
         address: address.trim() || null,
-        latitude: null,
-        longitude: null,
-        google_maps_url: null,
       });
 
       if (error) throw error;

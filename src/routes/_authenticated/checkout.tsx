@@ -110,9 +110,6 @@ function Checkout() {
         full_name: name,
         phone,
         address,
-        latitude: null,
-        longitude: null,
-        google_maps_url: null,
       });
       window.dispatchEvent(new Event("profile-updated"));
     }

@@ -18,9 +18,6 @@ export const placeCodOrder = createServerFn({ method: "POST" })
         deliveryAddress: z.string().trim().min(5).max(500),
         phone: z.string().trim().min(5).max(20),
         total: z.number().positive(),
-        latitude: z.number().optional(),
-        longitude: z.number().optional(),
-        googleMapsUrl: z.string().trim().optional(),
       })
       .parse(d),
   )
@@ -35,9 +32,6 @@ export const placeCodOrder = createServerFn({ method: "POST" })
         total: data.total,
         delivery_address: data.deliveryAddress,
         phone: data.phone,
-        latitude: data.latitude ?? null,
-        longitude: data.longitude ?? null,
-        google_maps_url: data.googleMapsUrl ?? null,
       })
       .select("id")
       .single();
@@ -67,9 +61,6 @@ export const placeUpiOrder = createServerFn({ method: "POST" })
         paymentProofPath: z.string().trim().min(3).max(500),
         amountPaid: z.number().positive(),
         customerNotes: z.string().trim().max(500).optional(),
-        latitude: z.number().optional(),
-        longitude: z.number().optional(),
-        googleMapsUrl: z.string().trim().optional(),
       })
       .parse(d),
   )
@@ -88,9 +79,6 @@ export const placeUpiOrder = createServerFn({ method: "POST" })
         payment_proof_url: data.paymentProofPath,
         amount_paid: data.amountPaid,
         customer_notes: data.customerNotes ?? null,
-        latitude: data.latitude ?? null,
-        longitude: data.longitude ?? null,
-        google_maps_url: data.googleMapsUrl ?? null,
       })
       .select("id")
       .single();

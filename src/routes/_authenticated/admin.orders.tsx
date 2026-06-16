@@ -47,9 +47,9 @@ type Order = {
   customer_notes: string | null;
   admin_notes: string | null;
   created_at: string;
-  latitude: number | null;
-  longitude: number | null;
-  google_maps_url: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  google_maps_url?: string | null;
   order_items: { id: string; product_name: string; quantity: number; unit_price: number }[];
   profiles?: { full_name: string | null } | null;
 };
@@ -63,7 +63,7 @@ function OrdersAdmin() {
     const { data } = await supabase
       .from("orders")
       .select(
-        "id,user_id,status,total,amount_paid,delivery_address,phone,payment_method,utr,payment_proof_url,customer_notes,admin_notes,created_at,latitude,longitude,google_maps_url,order_items(id,product_name,quantity,unit_price),profiles(full_name)",
+        "id,user_id,status,total,amount_paid,delivery_address,phone,payment_method,utr,payment_proof_url,customer_notes,admin_notes,created_at,order_items(id,product_name,quantity,unit_price),profiles(full_name)",
       )
       .order("created_at", { ascending: false });
     const list = (data ?? []) as unknown as Order[];
