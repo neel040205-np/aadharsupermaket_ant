@@ -60,13 +60,38 @@ function OrdersAdmin() {
   const reviewFn = useServerFn(reviewPayment);
 
   async function load() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("orders")
       .select(
-        "id,user_id,status,total,amount_paid,delivery_address,phone,payment_method,utr,payment_proof_url,customer_notes,admin_notes,created_at,order_items(id,product_name,quantity,unit_price),profiles(full_name)",
+        "id,user_id,status,total,amount_paid,delivery_address,phone,payment_method,utr,payment_proof_url,customer_notes,admin_notes,created_at,order_items(id,product_name,quantity,unit_price)",
       )
       .order("created_at", { ascending: false });
+
+    if (error) {
+      toast.error(`Failed to load orders: ${error.message}`);
+      console.error("[Orders Load Error]", error);
+      return;
+    }
+
     const list = (data ?? []) as unknown as Order[];
+
+    // Fetch profiles separately to bypass missing database foreign key relationships
+    const userIds = Array.from(new Set(list.map((o) => o.user_id)));
+    if (userIds.length > 0) {
+      const { data: profilesData, error: profilesErr } = await supabase
+        .from("profiles")
+        .select("id,full_name")
+        .in("id", userIds);
+
+      if (profilesErr) {
+        console.warn("[Profiles Fetch Error for Admin]", profilesErr);
+      } else if (profilesData) {
+        const profileMap = Object.fromEntries(profilesData.map((p) => [p.id, p]));
+        list.forEach((o) => {
+          o.profiles = profileMap[o.user_id] || null;
+        });
+      }
+    }
 
     setOrders(list);
 
