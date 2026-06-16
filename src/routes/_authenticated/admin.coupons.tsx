@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Tag } from "lucide-react";
 
@@ -181,17 +182,15 @@ function CouponsAdmin() {
               />
             </div>
 
-            <div className="flex items-center gap-2 border-t pt-3 pb-1">
-              <input
-                id="firstOrderOnly"
-                type="checkbox"
-                checked={isFirstOrderOnly}
-                onChange={(e) => setIsFirstOrderOnly(e.target.checked)}
-                className="h-4 w-4 rounded border-border text-primary focus:ring-primary bg-background"
-              />
-              <Label htmlFor="firstOrderOnly" className="cursor-pointer text-xs">
+            <div className="flex items-center justify-between border-t pt-3 pb-1">
+              <Label htmlFor="firstOrderOnly" className="cursor-pointer text-xs font-semibold">
                 First Order Only
               </Label>
+              <Switch
+                id="firstOrderOnly"
+                checked={isFirstOrderOnly}
+                onCheckedChange={setIsFirstOrderOnly}
+              />
             </div>
 
             <Button type="submit" className="w-full" disabled={submitting}>
