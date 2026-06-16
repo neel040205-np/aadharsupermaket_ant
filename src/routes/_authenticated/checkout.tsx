@@ -33,10 +33,25 @@ export const Route = createFileRoute("/_authenticated/checkout")({
 
 type Method = "upi" | "cod" | null;
 
+type Coupon = {
+  id: string;
+  code: string;
+  discount_type: string;
+  discount_value: number;
+  min_order_amount: number;
+};
+
 function Checkout() {
   const items = useCart();
   const itemTotal = cartTotal(items);
-  const bill = computeBill(itemTotal);
+
+  // Coupon state
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([]);
+
+  const bill = computeBill(itemTotal, couponDiscount);
   const navigate = useNavigate();
   const { user } = useCurrentUser();
 
@@ -93,6 +108,60 @@ function Checkout() {
         }
       });
   }, [user]);
+
+  useEffect(() => {
+    supabase
+      .from("coupons")
+      .select("id,code,discount_type,discount_value,min_order_amount")
+      .eq("is_active", true)
+      .then(({ data }) => {
+        if (data) setAvailableCoupons(data as Coupon[]);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!appliedCoupon) return;
+    if (itemTotal < appliedCoupon.min_order_amount) {
+      setAppliedCoupon(null);
+      setCouponDiscount(0);
+      toast.info(`Coupon "${appliedCoupon.code}" removed because order total is below minimum requirement`);
+      return;
+    }
+
+    let discount = 0;
+    if (appliedCoupon.discount_type === "percent") {
+      discount = Math.round(((itemTotal * appliedCoupon.discount_value) / 100) * 100) / 100;
+    } else {
+      discount = appliedCoupon.discount_value;
+    }
+    setCouponDiscount(discount);
+  }, [itemTotal, appliedCoupon]);
+
+  function applyCoupon(codeToApply: string) {
+    const cleanCode = codeToApply.trim().toUpperCase();
+    if (!cleanCode) return;
+
+    const coupon = availableCoupons.find((c) => c.code === cleanCode);
+    if (!coupon) {
+      toast.error("Invalid coupon code");
+      return;
+    }
+
+    if (itemTotal < coupon.min_order_amount) {
+      toast.error(`Minimum order amount of ₹${coupon.min_order_amount} required for this coupon`);
+      return;
+    }
+
+    setAppliedCoupon(coupon);
+    let discount = 0;
+    if (coupon.discount_type === "percent") {
+      discount = Math.round(((itemTotal * coupon.discount_value) / 100) * 100) / 100;
+    } else {
+      discount = coupon.discount_value;
+    }
+    setCouponDiscount(discount);
+    toast.success(`Coupon "${coupon.code}" applied!`);
+  }
 
   function validateBase() {
     if (items.length === 0) return (toast.error("Cart is empty"), false);
@@ -162,6 +231,7 @@ function Checkout() {
           paymentProofPath: path,
           amountPaid: amt,
           customerNotes: notes.trim() || undefined,
+          couponCode: appliedCoupon?.code || undefined,
         },
       });
       cart.clear();
@@ -191,6 +261,7 @@ function Checkout() {
           deliveryAddress: address,
           phone,
           total: bill.grandTotal,
+          couponCode: appliedCoupon?.code || undefined,
         },
       });
       cart.clear();
@@ -236,6 +307,72 @@ function Checkout() {
                   required
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-1.5">Apply Coupon</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter coupon code (e.g. WELCOME10)"
+                  value={couponInput}
+                  onChange={(e) => setCouponInput(e.target.value)}
+                  disabled={!!appliedCoupon}
+                  className="font-mono font-bold uppercase"
+                />
+                {appliedCoupon ? (
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      setAppliedCoupon(null);
+                      setCouponDiscount(0);
+                      setCouponInput("");
+                      toast.info("Coupon removed");
+                    }}
+                  >
+                    Remove
+                  </Button>
+                ) : (
+                  <Button onClick={() => applyCoupon(couponInput)}>Apply</Button>
+                )}
+              </div>
+
+              {availableCoupons.length > 0 && (
+                <div className="space-y-2 border-t pt-3">
+                  <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    Available Coupons
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {availableCoupons.map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => {
+                          if (appliedCoupon?.id === c.id) return;
+                          setCouponInput(c.code);
+                          applyCoupon(c.code);
+                        }}
+                        disabled={itemTotal < c.min_order_amount}
+                        className={`group relative flex flex-col items-start gap-0.5 rounded-lg border p-2 text-left transition ${
+                          appliedCoupon?.id === c.id
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:bg-muted/50 disabled:opacity-40 disabled:hover:bg-transparent"
+                        }`}
+                      >
+                        <span className="font-mono font-bold text-xs text-foreground uppercase tracking-wider">
+                          {c.code}
+                        </span>
+                        <span className="text-2xs text-muted-foreground">
+                          {c.discount_type === "percent" ? `${c.discount_value}% OFF` : `₹${c.discount_value} OFF`}
+                          {c.min_order_amount > 0 && ` on orders above ₹${c.min_order_amount}`}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -397,6 +534,12 @@ function Checkout() {
               ))}
               <div className="my-2 border-t" />
               <Row label="Item total" value={`₹${bill.itemTotal.toFixed(2)}`} />
+              {couponDiscount > 0 && (
+                <Row
+                  label={`Discount (${appliedCoupon?.code})`}
+                  value={`-₹${couponDiscount.toFixed(2)}`}
+                />
+              )}
               <Row
                 label="Delivery charge"
                 value={bill.delivery === 0 ? "FREE" : `₹${bill.delivery.toFixed(2)}`}

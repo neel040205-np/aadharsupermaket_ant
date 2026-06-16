@@ -80,13 +80,48 @@ export type Database = {
           },
         ];
       };
+      coupons: {
+        Row: {
+          id: string;
+          code: string;
+          discount_type: string;
+          discount_value: number;
+          min_order_amount: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          discount_type: string;
+          discount_value: number;
+          min_order_amount?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          code?: string;
+          discount_type?: string;
+          discount_value?: number;
+          min_order_amount?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       orders: {
         Row: {
           admin_notes: string | null;
           amount_paid: number | null;
+          coupon_code: string | null;
           created_at: string;
           customer_notes: string | null;
           delivery_address: string;
+          discount_amount: number;
           google_maps_url: string | null;
           id: string;
           latitude: number | null;
@@ -107,9 +142,11 @@ export type Database = {
         Insert: {
           admin_notes?: string | null;
           amount_paid?: number | null;
+          coupon_code?: string | null;
           created_at?: string;
           customer_notes?: string | null;
           delivery_address: string;
+          discount_amount?: number;
           google_maps_url?: string | null;
           id?: string;
           latitude?: number | null;
@@ -130,9 +167,11 @@ export type Database = {
         Update: {
           admin_notes?: string | null;
           amount_paid?: number | null;
+          coupon_code?: string | null;
           created_at?: string;
           customer_notes?: string | null;
           delivery_address?: string;
+          discount_amount?: number;
           google_maps_url?: string | null;
           id?: string;
           latitude?: number | null;

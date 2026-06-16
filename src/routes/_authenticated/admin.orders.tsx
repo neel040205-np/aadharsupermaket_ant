@@ -47,6 +47,8 @@ type Order = {
   customer_notes: string | null;
   admin_notes: string | null;
   created_at: string;
+  coupon_code: string | null;
+  discount_amount: number;
   latitude?: number | null;
   longitude?: number | null;
   google_maps_url?: string | null;
@@ -63,7 +65,7 @@ function OrdersAdmin() {
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id,user_id,status,total,amount_paid,delivery_address,phone,payment_method,utr,payment_proof_url,customer_notes,admin_notes,created_at,order_items(id,product_name,quantity,unit_price)",
+        "id,user_id,status,total,amount_paid,delivery_address,phone,payment_method,utr,payment_proof_url,customer_notes,admin_notes,created_at,coupon_code,discount_amount,order_items(id,product_name,quantity,unit_price)",
       )
       .order("created_at", { ascending: false });
 
@@ -215,8 +217,18 @@ function OrderCard({
               </Badge>
             )}
           </CardTitle>
-          <p className="text-xs text-muted-foreground">
-            {new Date(o.created_at).toLocaleString()} · ₹{Number(o.total).toFixed(2)}
+          <p className="text-xs text-muted-foreground flex flex-wrap items-center gap-1.5">
+            <span>{new Date(o.created_at).toLocaleString()}</span>
+            <span>·</span>
+            <span className="font-semibold text-foreground">₹{Number(o.total).toFixed(2)}</span>
+            {o.coupon_code && (
+              <>
+                <span>·</span>
+                <Badge variant="secondary" className="text-2xs font-mono py-0 px-1.5 h-auto">
+                  Coupon: {o.coupon_code} (-₹{Number(o.discount_amount).toFixed(2)})
+                </Badge>
+              </>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">

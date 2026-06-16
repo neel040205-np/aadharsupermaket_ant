@@ -77,6 +77,9 @@ function AdminLayout() {
           <Button variant="ghost" size="sm" asChild>
             <Link to="/admin/orders">Orders</Link>
           </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/admin/coupons">Coupons</Link>
+          </Button>
         </div>
         <Outlet />
       </div>
